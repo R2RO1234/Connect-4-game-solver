@@ -13,7 +13,7 @@ class DQN(nn.Module): # Base class for all neural networks in PyTorch (nn.Module
     
     def __init__(self, input_shape: int, move_count: int):
         super(DQN, self).__init__()   # Calls parent class of DQN (nn.Module) (Initializes self as nn.Module object?)
-
+        
         self.input_shape = input_shape
         self.move_count = move_count
 
@@ -166,7 +166,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(500): # Train for 1000 games
+    for episode in range(10000): # Train for 1000 games
         state = game.reset()
         total_reward = 0
         steps = 0
@@ -243,7 +243,6 @@ def test_agent(agent, num_games=10):
                 action = random.choice(valid_moves)
             
             state, reward, done = game.make_move(action)
-            game.print_state()
             
             if done:
                 if reward == 1 and current_player == 'agent':
@@ -259,6 +258,9 @@ def test_agent(agent, num_games=10):
 
 if __name__ == "__main__":
     trained_agent = train_dqn_agent()
-    test_agent(trained_agent,1)
+    test_agent(trained_agent)
+    
+   
+    
 
     
