@@ -109,3 +109,14 @@ class Connect4:
                     return True
         
         return False
+    
+    def print_state(self):
+        print(f'state of the board after: {self.move_count}. last move: {0-self.current_player}')
+        for row in self.board:
+            for element in row:
+                if element ==-1:
+                    element =2
+                print(element , end=' ')
+            print("")
+        print("")
+        

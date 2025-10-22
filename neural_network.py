@@ -166,7 +166,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(1000): # Train for 1000 games
+    for episode in range(500): # Train for 1000 games
         state = game.reset()
         total_reward = 0
         steps = 0
@@ -225,8 +225,10 @@ def test_agent(agent, num_games=10):
         # Randomly decide who goes first
         if random.random() < 0.5:
             current_player = 'agent'
+            print("the agent plays first")
         else:
             current_player = 'random'
+            print("the agent plays second")
         
         while True:
             if current_player == 'agent':
@@ -241,6 +243,7 @@ def test_agent(agent, num_games=10):
                 action = random.choice(valid_moves)
             
             state, reward, done = game.make_move(action)
+            game.print_state()
             
             if done:
                 if reward == 1 and current_player == 'agent':
@@ -256,5 +259,6 @@ def test_agent(agent, num_games=10):
 
 if __name__ == "__main__":
     trained_agent = train_dqn_agent()
-    test_agent(trained_agent)
+    test_agent(trained_agent,1)
 
+    
