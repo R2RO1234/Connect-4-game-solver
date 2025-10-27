@@ -25,7 +25,7 @@ def play(agent):
                 agent.epsilon = 0
         
         else: # Player's turn
-            col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing")
+            col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing: ")
             if(col == "exit"): break
             valid_moves = game.get_valid_moves()
             try:
@@ -33,14 +33,16 @@ def play(agent):
             except:
                 continue
 
-            if action not in valid_moves: continue
+            if action not in valid_moves: 
+                    print(f"Column {action} is full or invalid. Choose another.")
+                    continue
         
         state, reward, done = game.make_move(action)
     
         
         if done:
         
-            winner = 'agent winning' if reward == '1' and current_player == 'agent' else 'player winning'
+            winner = 'agent winning' if reward == 1 and current_player == 'agent' else 'player winning'
             game.print_state()
             play_again = input(f'game ended with {winner}. do you want to play again? (y/n)?')
             if(play_again == 'y'):

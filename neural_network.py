@@ -166,7 +166,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(10000): # Train for 1000 games
+    for episode in range(1000): # Train for 1000 games
         state = game.reset()
         total_reward = 0
         steps = 0
