@@ -1,4 +1,5 @@
 from logic import Connect4
+from heuristic_agent import heuristic_move  # to play vs other model/algo
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -90,7 +91,8 @@ class DQNAgent:
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
         self.epsilon_min = 0.1      # Minimum epsilon rate for exploration during training
-        self.epsilon_decay = 0.995  # Decay rate for epsilon
+        self.epsilon_decay = 0.9995  # Decay rate for epsilon
+        ### Changed decay rate
 
         self.batch_size = 32 # Batch size for training
         self.gamma = 0.99    # Discount factor for future rewards
@@ -153,9 +155,19 @@ class DQNAgent:
         
     def save_experience(self, state, action, reward, next_state, done):
         self.buffer.push((state, action, reward, next_state, done))
-    
+#########################################################################
+    # To save/load version of a model
+    def save(self, path):
+        import torch
+        torch.save(self.policy_net.state_dict(), path)
 
-def train_dqn_agent():
+    def load(self, path):
+        import torch
+        self.policy_net.load_state_dict(torch.load(path))
+        self.policy_net.eval()
+########################################################################    
+
+def train_dqn_agent(num_episodes = 300):
     game = Connect4()
     agent = DQNAgent(input_shape=(2, 6, 7), move_count=7)
 
@@ -165,8 +177,8 @@ def train_dqn_agent():
         'losses': 0,
         'draws': 0
     }
-
-    for episode in range(1000): # Train for 1000 games
+    
+    for episode in range(num_episodes): # Train for 1000 games
         state = game.reset()
         total_reward = 0
         steps = 0
@@ -174,17 +186,24 @@ def train_dqn_agent():
         while True:
             # Agent selects action
             valid_moves = game.get_valid_moves()
-            action = agent.select_action(state, valid_moves)
+            if game.current_player == 1:
+                # Learning agent's turn
+                action = agent.select_action(state, valid_moves)
+                # Execute action
+                next_state, reward, done = game.make_move(action)
 
-            # Execute action
-            next_state, reward, done = game.make_move(action)
+                # Store experience in replay buffer
+                agent.save_experience(state, action, reward, next_state, done)
 
-            # Store experience in replay buffer
-            agent.save_experience(state, action, reward, next_state, done)
+                # Train the agent
+                agent.train_step()
+            else:
+                # Opponent's (heuristic) turn
+                action = heuristic_move(game)
+                # Execute action
+                next_state, reward, done = game.make_move(action)
 
-            # Train the agent
-            agent.train_step()
-
+            ####
             # Update statistics
             total_reward += reward
             steps += 1
@@ -212,7 +231,30 @@ def train_dqn_agent():
     
     print("Training Done.")
     return agent
+##############################################################################
+# Train agent against other agent
+def play_models(agent1, agent2, num_games=10):
+    # from logic import Connect4  # importing game class
+    wins = {'agent1': 0, 'agent2': 0, 'draws': 0}
+    for _ in range(num_games):
+        game = Connect4()
+        state = game.reset()
+        current = agent1
+        while True:
+            valid_moves = game.get_valid_moves()
+            action = current.select_action(state, valid_moves)
+            state, reward, done = game.make_move(action)
+            if done:
+                if reward == 1:
+                    winner = 'agent1' if current == agent1 else 'agent2'
+                    wins[winner] += 1
+                else:
+                    wins['draws'] += 1
+                break
+            current = agent2 if current == agent1 else agent1
+    print(wins)
 
+############################################################################
 
 def test_agent(agent, num_games=10):
     print(f"\nTest for {num_games} games:")
@@ -257,10 +299,16 @@ def test_agent(agent, num_games=10):
     return win_rate
 
 if __name__ == "__main__":
-    trained_agent = train_dqn_agent()
-    test_agent(trained_agent)
+    # trained_agent = train_dqn_agent()    # for 1 agent
+    # test_agent(trained_agent)
     
-   
+    # # Train two agents
+    # agent1 = train_dqn_agent(10)
+    # agent2 = train_dqn_agent(300)
+                                                # for 2 agents
+    # # Let them play against each other
+    # play_models(agent1, agent2, num_games=30)
     
-
+    agent = train_dqn_agent(num_episodes=300)
+    agent.save("trained_agent.pt")
     

@@ -1,4 +1,5 @@
 import neural_network
+from neural_network import DQNAgent
 from logic import Connect4
 import random
 import torch as th
@@ -44,7 +45,7 @@ def play(agent):
         
             winner = 'agent winning' if reward == 1 and current_player == 'agent' else 'player winning'
             game.print_state()
-            play_again = input(f'game ended with {winner}. do you want to play again? (y/n)?')
+            play_again = input(f'game ended with {winner}. do you want to play again? (y/n)? ')
             if(play_again == 'y'):
                 state = game.reset()
             else: return
@@ -61,8 +62,16 @@ def play(agent):
 
 
 if __name__ == "__main__":
-
-    trained_agent = neural_network.train_dqn_agent()
+    # load trained DQN agent (adjust path if you saved differently)
+    dqn = DQNAgent(input_shape=(2,6,7), move_count=7)
+    try:
+        dqn.policy_net.load_state_dict(th.load("trained_agent.pt"))
+        dqn.policy_net.eval()
+    except Exception as e:
+        print("Could not load trained_agent.pt:", e)
+        # If you don't have a saved model, train or point to existing file.
+    # trained_agent = neural_network.train_dqn_agent()
    
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
-    play(trained_agent)
+    # play(trained_agent)
+    play(dqn)
