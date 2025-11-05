@@ -25,7 +25,7 @@ def play(agent):
                 agent.epsilon = 0
         
         else: # Player's turn
-            col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing")
+            col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing ")
             if(col == "exit"): break
             valid_moves = game.get_valid_moves()
             try:
@@ -42,7 +42,7 @@ def play(agent):
         
             winner = 'agent winning' if reward == '1' and current_player == 'agent' else 'player winning'
             game.print_state()
-            play_again = input(f'game ended with {winner}. do you want to play again? (y/n)?')
+            play_again = input(f'game ended with {winner}. do you want to play again? (y/n)? ')
             if(play_again == 'y'):
                 state = game.reset()
             else: return
@@ -61,6 +61,6 @@ def play(agent):
 if __name__ == "__main__":
 
     trained_agent = neural_network.train_dqn_agent()
-   
+    
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
     play(trained_agent)

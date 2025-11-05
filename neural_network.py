@@ -51,6 +51,7 @@ class DQN(nn.Module): # Base class for all neural networks in PyTorch (nn.Module
 
         # Output vector
         x = self.fc4(x)
+    
 
         return x
     
@@ -84,16 +85,18 @@ class DQNAgent:
 
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr) # Popular NN optimizer (Adam) that adjusts weights using backpropagation
 
-        self.criterion = nn.MSELoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
+        self.criterion = nn.CrossEntropyLoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
 
         self.buffer = ReplayBuffer(10000) # Buffer of size 10000
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
         self.epsilon_min = 0.1      # Minimum epsilon rate for exploration during training
-        self.epsilon_decay = 0.995  # Decay rate for epsilon
+        self.epsilon_decay = 0.95  # Decay rate for epsilon
 
-        self.batch_size = 32 # Batch size for training
-        self.gamma = 0.99    # Discount factor for future rewards
+        self.batch_size = 64 # Batch size for training
+        self.gamma = 0.99   # Discount factor for future rewards
+
+        
 
     def select_action(self, state, valid_moves):
         if random.random() < self.epsilon:
@@ -146,7 +149,7 @@ class DQNAgent:
 
         # Gradually decrease epsilon
         if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+                self.epsilon *= self.epsilon_decay
         
     def update_target_network(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -166,7 +169,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(10000): # Train for 1000 games
+    for episode in range(1000): # Train for 1000 games
         state = game.reset()
         total_reward = 0
         steps = 0
@@ -184,7 +187,8 @@ def train_dqn_agent():
 
             # Train the agent
             agent.train_step()
-
+            if reward ==0 and game.game_over == 1 and done != 0:
+                reward = -1
             # Update statistics
             total_reward += reward
             steps += 1
@@ -204,6 +208,7 @@ def train_dqn_agent():
         # Update target network every 10 episodes
         if episode % 10 == 0:
             agent.update_target_network()
+           
         
         # Print stats every 100 episodes
         if episode % 100 == 0:
