@@ -16,6 +16,7 @@ def play(agent):
 
     while True:
         game.print_state()
+    
         
         if(current_player == 'agent'): # Agent's turn
              

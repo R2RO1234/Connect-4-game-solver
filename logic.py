@@ -121,4 +121,6 @@ class Connect4:
                 print(element , end=' ')
             print("")
         print("")
+
+        
     
