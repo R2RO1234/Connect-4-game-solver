@@ -1,11 +1,13 @@
 import neural_network
 from logic import Connect4
+import Minimax
 import random
 import torch as th
-def play(agent):
-    
+def play_agent(agent):
+    minim = Minimax.minimax(4)
     game = Connect4()
     state = game.reset()
+    player = 1
      # Randomly decide who goes first
     if random.random() < 0.5:
         current_player = 'agent'
@@ -19,24 +21,28 @@ def play(agent):
     
         
         if(current_player == 'agent'): # Agent's turn
-             
-                valid_moves = game.get_valid_moves()
-                action = agent.select_action(state, valid_moves)
+                action = minim.choose_move(game.board , player)
+                print("the minimax will do move: " + str(action))
+                #valid_moves = game.get_valid_moves()
+                #action = agent.select_action(state, valid_moves)
                 # Force exploitation (no exploration during test)
-                agent.epsilon = 0
+                #agent.epsilon = 0
         
         else: # Player's turn
-            col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing ")
-            if(col == "exit"): break
-            valid_moves = game.get_valid_moves()
-            try:
-                action = int(col)
-            except:
-                continue
+            action = minim.choose_move(game.board , player)
+            print("the minimax will do move: " + str(action))
+            #col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing ")
+            #if(col == "exit"): break
+            #valid_moves = game.get_valid_moves()
+            #try:
+            #    action = int(col)
+            #except:
+            #    continue
 
-            if action not in valid_moves: continue
+            #if action not in valid_moves: continue
         
         state, reward, done = game.make_move(action)
+        player *=-1
     
         
         if done:
@@ -52,16 +58,13 @@ def play(agent):
         
         
 
-        
-
-
 
 
 
 
 if __name__ == "__main__":
 
-    trained_agent = neural_network.train_dqn_agent()
+    #trained_agent = neural_network.train_dqn_agent()
     
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
-    play(trained_agent)
+    play_agent(True)

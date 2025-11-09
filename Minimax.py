@@ -5,7 +5,7 @@ import random
 Infinity = 200
 
 class minimax:
-    def __init__(self, depth , distance_weights =  [1,1,1,1], epsilon = Infinity ,opponent_multiplier = 1 , sequence_values  = [1,2] , minimum_depth_save_board =0):
+    def __init__(self, depth , distance_weights =  [1,1,1,1], epsilon = Infinity ,opponent_multiplier = 1 , sequence_values  = [1,2] ):
         self.depth = depth
         self.saved = {}
         # parameter : list of weights of the value of sequences on these columns. example: [1 ,1 , 0.8 , 0.6], and the index is the distance from the middle
@@ -23,8 +23,7 @@ class minimax:
         if len(sequence_values) != 2: raise ValueError("the lenght of sequence_values must be 2")
         self.sequence_values = sequence_values
 
-        # parameter : minimum depth to save board evaluation
-        self.minimum_depth_save_board = minimum_depth_save_board
+       
     
         # in the dict, if this is a winning board, the suggested move is -1
         # if this is a draw, the suggested move is -2
@@ -60,7 +59,6 @@ class minimax:
             sequence  = self.check_horizontal_sequence(board ,(row,column))
             sequence_len, open_left, open_right = sequence
             
-            
             start_of_sequence = (column ==0 or board[row,column-1] != board[row,column])
             
             if start_of_sequence and sequence_len > 1 and (open_left or open_right): 
@@ -69,7 +67,7 @@ class minimax:
                 open_sequences[player_index][sequence_index]+= 2 if open_right and open_left else 1
 
                 if sequence_len == 3:
-                    right_playable_now = (row == len(board)-1 or board[row+1,column+3] != 0)
+                    right_playable_now = open_right and (row == len(board)-1 or board[row+1,column+3] != 0)
                     if open_right and right_playable_now: 
                         winning_chances[player_index][column+3] = True
                         
@@ -105,7 +103,7 @@ class minimax:
 
                 if sequence_len ==3:
                     
-                    top_right_playable_now = board[row-2,column+3] != 0
+                    top_right_playable_now = open_top_right and board[row-2,column+3] != 0
                     if open_top_right and top_right_playable_now: 
                         winning_chances[player_index][column+3] = True
             
@@ -133,7 +131,7 @@ class minimax:
                         winning_chances[player_index][column-3] = True # add additional to update chances_of_win
 
                 
-                    down_right_playable_now = (row+2 <= len(board) and  (row+2 ==  len(board) or board[row+2,column+1] != 0 ))
+                    down_right_playable_now = open_down_right and (row+2 <= len(board) and  (row+2 ==  len(board) or board[row+2,column+1] != 0 ))
                     if open_down_right and down_right_playable_now: 
                         winning_chances[player_index][column+1]
 
@@ -188,7 +186,7 @@ class minimax:
             start_of_sequence = (column ==0 or board[row,column-1] != board[row,column])
             if start_of_sequence and sequence_len ==3:
                 
-                right_playable_now = (row == len(board)-1 or board[row+1,column+3] != 0)
+                right_playable_now = open_right and (row == len(board)-1 or board[row+1,column+3] != 0)
                 if open_right and right_playable_now: mandatory[column+3] = True
                 left_playable_now  = (row == len(board)-1 or board[row+1,column-1] != 0)
                 if open_left  and left_playable_now: mandatory[column-1] = True
@@ -206,7 +204,7 @@ class minimax:
             start_of_sequence = (row== len(board)-1 or column == 0  or board[row+1,column-1] != board[row,column])
             if  start_of_sequence and sequence_len ==3:
                 
-                top_right_playable_now = board[row-2,column+3] != 0
+                top_right_playable_now = open_top_right and board[row-2,column+3] != 0
                 if open_top_right and top_right_playable_now : mandatory[column+3] = True
                 
                 down_left_playable_now = (row+2 <=  len(board) and  (row+2 ==  len(board) or board[row+2,column-1] != 0 ))
@@ -221,7 +219,7 @@ class minimax:
                 top_left_playable_now = board[row-2,column-3] != 0
                 if open_top_left and top_left_playable_now : mandatory[column-3] = True
                 
-                down_right_playable_now = (row+2 <= len(board) and  (row+2 ==  len(board) or board[row+2,column+1] != 0 ))
+                down_right_playable_now = open_down_right and (row+2 <= len(board) and  (row+2 ==  len(board) or board[row+2,column+1] != 0 ))
                 if open_down_right and down_right_playable_now: mandatory[column+1] = True
             
             row -=1
@@ -253,10 +251,10 @@ class minimax:
         if depth ==0: return eval
       
         moves_to_check = self.check_mandatory_moves(board)
-        if moves_to_check is []:
-            moves_to_check = self.get_valid_moves()
+        if moves_to_check == []:
+            moves_to_check = self.get_valid_moves(board)
 
-        if moves_to_check is []: # no more valid moves, that means its a draw
+        if moves_to_check == []: # no more valid moves, that means its a draw
             print("there is a draw in this position")
             self.save_evaluation(board , 0 , 100 , -2 , current_player)
             return 0 
@@ -277,7 +275,7 @@ class minimax:
                 self.save_evaluation(board , child_value , 100 , column , current_player)
                 return child_value
             
-            if child_value * current_player > best_evaluation * current_player or best_evaluation is None: # compares both and update is necessary
+            if best_evaluation is None or child_value * current_player > best_evaluation * current_player: # compares both and update is necessary
                 best_evaluation = child_value
                 best_column = column
             elif child_value * current_player > best_evaluation * current_player and abs(best_column-3) < abs(column-3): # if same evaluation, prioritize center move
@@ -383,16 +381,17 @@ class minimax:
         # returns -1 if the game is a win for either player, or -2 if the game is a draw
 
         
-        data = self.is_board_saved(board, current_player) # cbeck if board was already computed
-        if data is not None:
-            return data[3] # if it is saved, return the recommended move
+        #data = self.is_board_saved(board, current_player) # cbeck if board was already computed
+        #if data is not None:
+        #    return data[3] # if it is saved, return the recommended move
         
         
         end_of_game = self.check_winner_accross_board(board) # (win , who_won)
         winner , player_winner = end_of_game
-        if winner: #
-            self.save_evaluation(board , Infinity*player_winner , 100 , -1 , 1)
-       s     self.save_evaluation(board , Infinity*player_winner , 100 , -1 , -1)
+        if winner: 
+            print("there is a winner")
+            #self.save_evaluation(board , Infinity*player_winner , 100 , -1 , 1)
+            #self.save_evaluation(board , Infinity*player_winner , 100 , -1 , -1)
             return -1 # no move to make,
         
         
@@ -430,7 +429,7 @@ class minimax:
                 self.save_evaluation(board , child_value , 100 , column , current_player)
                 return column
             
-            if child_value * current_player > best_evaluation * current_player or best_evaluation is None: # compares both and update is necessary
+            if best_evaluation is None or child_value * current_player > best_evaluation * current_player: # compares both and update is necessary
                 best_evaluation = child_value
                 best_column = column
             elif child_value * current_player > best_evaluation * current_player and abs(best_column-3) < abs(column-3): # if same evaluation, prioritize center move
@@ -438,8 +437,8 @@ class minimax:
                 best_column = column
                
                 
-            
-        self.save_evaluation(board , best_evaluation , self.depth , best_column , current_player)
+        self.saved  = {}    
+        
         return best_column
         
 
@@ -457,32 +456,32 @@ class minimax:
     
     def save_evaluation(self , board , evaluation , depth, recommended_move , current_player):
         
-        if depth < self.minimum_depth_save_board: return
         
-        hashed = self.fast_hash(board)
+        
+        hashed = self.fast_hash(board, current_player)
         if hashed not in self.saved or depth >= self.saved[hashed][1]:
             self.saved[hashed] = (evaluation , depth , recommended_move , current_player)
         # maybe also dont save if reversed board is already in the dictionnary
     
     def is_board_saved(self,board , current_player):
-        hashed = self.fast_hash(board)
+        hashed = self.fast_hash(board,current_player)
         if hashed in self.saved:
           
             data  =self.saved[hashed]
             evaluation , depth , recommended_move , current_player= data
-            print(f'board already computed at depth {depth} with evaluation = {evaluation}. Player {current_player} to move at column {recommended_move}')
+            #print(f'board already computed at depth {depth} with evaluation = {evaluation}. Player {current_player} to move at column {recommended_move}')
             return data # return the data
         
-        reverseHash = self.fast_hash(self.reverseBoard(board))
+        reverseHash = self.fast_hash(self.reverseBoard(board),current_player)
         
         if reverseHash in self.saved:
            
             data  =self.saved[reverseHash]
             evaluation , depth , recommended_move , current_player= data
             
-            print(f'board already computed at depth {depth} with evaluation = {evaluation}. Player {current_player} to move at column {6-recommended_move}')
-            data[2] = 6 - data[2]
-            return data # return the recommended move
+            #print(f'reverse board already computed at depth {depth} with evaluation = {evaluation}. Player {current_player} to move at column {6-recommended_move}')
+         
+            return (evaluation , depth , 6-recommended_move , current_player) # return the recommended move
         
         return None# not found
     
@@ -579,7 +578,7 @@ class minimax:
                 return (True,board[row,column])
             
             row -=1
-        return (False,board[row,column])
+        return (False,1)
 
     
 
