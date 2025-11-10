@@ -1,5 +1,5 @@
 from logic import Connect4
-
+import Minimax
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque   # NOTE: deque is a double-ended queue where you can add/remove from both ends of the list
 
+# PLEASE IMPLEMENT RANDOM SEARCH FOR THE HYPERPARAMETERS
 
 class DQN(nn.Module): # Base class for all neural networks in PyTorch (nn.Module = parent class of DQN)
     
@@ -85,13 +86,13 @@ class DQNAgent:
 
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr) # Popular NN optimizer (Adam) that adjusts weights using backpropagation
 
-        self.criterion = nn.CrossEntropyLoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
+        self.criterion = nn.MSELoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
 
         self.buffer = ReplayBuffer(10000) # Buffer of size 10000
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
-        self.epsilon_min = 0.1      # Minimum epsilon rate for exploration during training
-        self.epsilon_decay = 0.95  # Decay rate for epsilon
+        self.epsilon_min = 0.05      # Minimum epsilon rate for exploration during training
+        self.epsilon_decay = 0.995  # Decay rate for epsilon
 
         self.batch_size = 64 # Batch size for training
         self.gamma = 0.99   # Discount factor for future rewards
@@ -139,7 +140,8 @@ class DQNAgent:
         with th.no_grad():
             next_q_values = self.target_net(next_states).max(1)[0]
             # If done, no next Q value
-            target_q_values = rewards + ~dones * self.gamma * next_q_values
+            #target_q_values = rewards + ~dones * self.gamma * next_q_values
+            target_q_values = rewards + (1 - dones.float()) * self.gamma * next_q_values
 
         loss = self.criterion(current_q_values.squeeze(), target_q_values) # Compute loss between current and target Q values
 
@@ -161,6 +163,8 @@ class DQNAgent:
 def train_dqn_agent():
     game = Connect4()
     agent = DQNAgent(input_shape=(2, 6, 7), move_count=7)
+    Opponent = Minimax.minimax(2)
+    
 
     stats = {
         'episodes': 0,
@@ -169,41 +173,51 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(1000): # Train for 1000 games
+    for episode in range(1500): # Train for 1000 games
+        
         state = game.reset()
         total_reward = 0
         steps = 0
-
+        
+        
         while True:
             # Agent selects action
-            valid_moves = game.get_valid_moves()
-            action = agent.select_action(state, valid_moves)
+            if game.current_player ==1 : 
+                valid_moves = game.get_valid_moves()
+                action = agent.select_action(state, valid_moves)
+            else:
+                action = Opponent.choose_move(game.board, game.current_player)
+
+            
 
             # Execute action
             next_state, reward, done = game.make_move(action)
+            
 
             # Store experience in replay buffer
-            agent.save_experience(state, action, reward, next_state, done)
 
             # Train the agent
             agent.train_step()
             if reward ==0 and game.game_over == 1 and done != 0:
-                reward = -1
+                reward = 1
             # Update statistics
             total_reward += reward
             steps += 1
-            state = next_state
 
             if done != 0:
                 # Update win/loss statistics
-                if reward == 1:
+                if game.winner == 1:
                     stats['wins'] += 1
-                elif reward == 0 and game.game_over == -1:
-                    stats['draws'] += 1
-                else:
+                elif game.winner == -1:
                     stats['losses'] += 1
+                    reward = -1
+                else:
+                    stats['draws'] += 1
                 stats['episodes'] += 1
                 break
+            
+            agent.save_experience(state, action, reward, next_state, done)
+            state = next_state
 
         # Update target network every 10 episodes
         if episode % 10 == 0:
@@ -213,7 +227,7 @@ def train_dqn_agent():
         # Print stats every 100 episodes
         if episode % 100 == 0:
             win_rate = stats['wins'] / max(1, stats['episodes']) * 100
-            print(f"Episode {episode}: Win Rate = {win_rate:.2f}%, Epsilon = {agent.epsilon:.3f}")
+            print(f"Episode {episode}: Win Rate = {win_rate:.2f}%, Epsilon = {agent.epsilon:.3f}, W/L/D:{stats['wins']}/{stats['losses']}/{stats['draws']}")
     
     print("Training Done.")
     return agent

@@ -24,7 +24,7 @@ def play(player1 , player2):
         if type(agent) is Minimax.minimax:
             action =  agent.choose_move(game.board , player)
         elif type(agent) is neural_network.DQNAgent:
-            action = agent.select_action(game , game.get_valid_moves)
+            action = agent.select_action(game.get_state() , game.get_valid_moves())
 
         else: 
             col = input("enter the index of the column you want to play in (0-7). enter 'exit' to stop playing ")
@@ -58,8 +58,9 @@ def play(player1 , player2):
 
 if __name__ == "__main__":
 
-    #trained_agent = neural_network.train_dqn_agent()
+    trained_agent = neural_network.train_dqn_agent()
+    trained_agent.epsilon = 0
     player1 = Minimax.minimax(0)
-    player2 = Minimax.minimax(6)
+    player2 = Minimax.minimax(8)
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
-    play(player2, True)
+    play(True, trained_agent)

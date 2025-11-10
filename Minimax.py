@@ -27,16 +27,22 @@ class minimax:
     
         # in the dict, if this is a winning board, the suggested move is -1
         # if this is a draw, the suggested move is -2
+
+        # still needs to optimize to reach higher depth. maximum now is (7) for about 15 seconds
+
+        # move ordering
+        # bitboard representation
+        
+    
         
 
     
-    def evaluate_position(self,board , player_to_play): # return infinity if player =1 and he is winner, -infinity player = -1 and he is loser, 
+    def evaluate_position(self,board , player_to_play): # return  infinity if player(1) wins, -infinity if player(-1) wins, 
         # only consider the open sequences in the eval function
         # the sequences that are vertical may be worth less than horizontal and vertical
         # sequences on the edges are worth less than those on the center. value is taken based on the token the more close to the center
         # if there are more than 2 open sequences of 3 in a row that can be played immediately, return immediately with the correct value
         # if there are a open sequence of 3 that can be played immediately for the player_to_play, return with value infintiy or -infinity
-        # may also consider sequences of 1. will have to check
 
         column = 0 
         row = len(board)-1
@@ -68,7 +74,7 @@ class minimax:
 
                 if sequence_len == 3:
                     right_playable_now = open_right and (row == len(board)-1 or board[row+1,column+3] != 0)
-                    if open_right and right_playable_now: 
+                    if right_playable_now: 
                         winning_chances[player_index][column+3] = True
                         
                 
@@ -104,7 +110,7 @@ class minimax:
                 if sequence_len ==3:
                     
                     top_right_playable_now = open_top_right and board[row-2,column+3] != 0
-                    if open_top_right and top_right_playable_now: 
+                    if top_right_playable_now: 
                         winning_chances[player_index][column+3] = True
             
                     down_left_playable_now = (row+2 <=  len(board) and  (row+2 ==  len(board) or board[row+2,column-1] != 0 ))
@@ -132,7 +138,7 @@ class minimax:
 
                 
                     down_right_playable_now = open_down_right and (row+2 <= len(board) and  (row+2 ==  len(board) or board[row+2,column+1] != 0 ))
-                    if open_down_right and down_right_playable_now: 
+                    if down_right_playable_now: 
                         winning_chances[player_index][column+1]
 
             
@@ -145,7 +151,7 @@ class minimax:
         if player_to_play == 1 and positive_player_immediate_win != 0: return Infinity
         if player_to_play == 1 and negative_player_immediate_win >=2: return -Infinity
 
-        return self.calculate_score(open_sequences , player_to_play) # will eventually have to handle the position of the sequences, to account for one of the parameters
+        return self.calculate_score(open_sequences , player_to_play) 
  
     
     
@@ -170,6 +176,7 @@ class minimax:
     
     
     def check_mandatory_moves(self,board): # return the columns to block a open 3 sequence
+        # alternate: get all the valid moves, play them all on both players, and check if there is a winner. Dont know if it will be fast
 
         column = 0 
         row = len(board)-1
@@ -582,14 +589,5 @@ class minimax:
 
     
 
-
-    # will do a method to play aginst himself, showing how it plays against himself. with sleep method if it goes too fast
-    # new syntax:
-        # Board = connect4
-        # make NN choose move
-        # update common board
-        # Minimax.chooseMove(other move, board)
-        # update common board
-    # we also know that the board is not changed in the methods if the connect4
 
 
