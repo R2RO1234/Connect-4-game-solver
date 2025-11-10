@@ -45,7 +45,7 @@ class Connect4:
         
         if col not in self.get_valid_moves():
             raise ValueError(f"Cannot make illegal move: {col}!")
-        
+        print(f'move in column {col}')
         row = self.get_lowest_open_row(col)
         self.board[row, col] = self.current_player
         self.last_move = (row, col)
@@ -113,7 +113,7 @@ class Connect4:
         return False
     
     def print_state(self):
-        print(f'state of the board after: {self.move_count}. last move: {0-self.current_player}')
+        print(f'state of the board after: {self.move_count} moves. made by: {0-self.current_player}, ')
         for row in self.board:
             for element in row:
                 if element ==-1:
