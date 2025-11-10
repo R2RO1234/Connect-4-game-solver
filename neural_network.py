@@ -72,7 +72,7 @@ class ReplayBuffer:
         return len(self.buffer)
         
 class DQNAgent:
-    def __init__(self, input_shape, move_count, lr=0.001): # lr = learning rate
+    def __init__(self, input_shape, move_count, lr=0.0005): # lr = learning rate
         self.input_shape = input_shape
         self.move_count = move_count
         self.device = th.device("cuda" if th.cuda.is_available() else "cpu") # For GPU/CPU management if available
@@ -88,13 +88,13 @@ class DQNAgent:
 
         self.criterion = nn.MSELoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
 
-        self.buffer = ReplayBuffer(10000) # Buffer of size 10000
+        self.buffer = ReplayBuffer(30000) # Buffer of size 10000
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
         self.epsilon_min = 0.05      # Minimum epsilon rate for exploration during training
         self.epsilon_decay = 0.995  # Decay rate for epsilon
 
-        self.batch_size = 64 # Batch size for training
+        self.batch_size = 128 # Batch size for training
         self.gamma = 0.99   # Discount factor for future rewards
 
         
@@ -109,7 +109,7 @@ class DQNAgent:
                                                                             # batch dimension) because NN expects batches of inputs, ie. (2, 6, 7) -> (1, 2, 6, 7)
                 q_values = self.policy_net(state) # Passes state through policy network to get Q-values for each possible action (column)
                 q_values = q_values.cpu().numpy()[0] # Moves tensor back to CPU and converts to numpy array. "[0]" removes batch dimension.
-
+                
                 # Only consider valid moves
                 valid_q_values = {move: q_values[move] for move in valid_moves}
                 best_move = max(valid_q_values, key=valid_q_values.get) # Chooses the move with the highest Q-value among valid moves
@@ -138,7 +138,11 @@ class DQNAgent:
 
         # Compute next Q values from target network
         with th.no_grad():
-            next_q_values = self.target_net(next_states).max(1)[0]
+            next_actions = self.policy_net(next_states).argmax(1)
+            next_q_values = self.target_net(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()
+            #next_q_values = self.target_net(next_states).max(1)[0] # original
+
+
             # If done, no next Q value
             #target_q_values = rewards + ~dones * self.gamma * next_q_values
             target_q_values = rewards + (1 - dones.float()) * self.gamma * next_q_values
@@ -163,7 +167,11 @@ class DQNAgent:
 def train_dqn_agent():
     game = Connect4()
     agent = DQNAgent(input_shape=(2, 6, 7), move_count=7)
-    Opponent = Minimax.minimax(2)
+    Opponent = Minimax.minimax(0)
+
+    total_wins = 0
+    total_losses = 0
+    total_draws =0
     
 
     stats = {
@@ -173,7 +181,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(1500): # Train for 1000 games
+    for episode in range(700): # Train for 1000 games
         
         state = game.reset()
         total_reward = 0
@@ -208,11 +216,15 @@ def train_dqn_agent():
                 # Update win/loss statistics
                 if game.winner == 1:
                     stats['wins'] += 1
+                    total_wins +=1
                 elif game.winner == -1:
                     stats['losses'] += 1
-                    reward = -1
+                    total_losses+=1
+                    reward = -2
                 else:
                     stats['draws'] += 1
+                    total_draws +=1
+
                 stats['episodes'] += 1
                 break
             
@@ -224,12 +236,19 @@ def train_dqn_agent():
             agent.update_target_network()
            
         
-        # Print stats every 100 episodes
+        # Print stats every 100 episodes, and reset stats
         if episode % 100 == 0:
             win_rate = stats['wins'] / max(1, stats['episodes']) * 100
+            win_rate = stats['wins']
+
             print(f"Episode {episode}: Win Rate = {win_rate:.2f}%, Epsilon = {agent.epsilon:.3f}, W/L/D:{stats['wins']}/{stats['losses']}/{stats['draws']}")
+            stats['wins']=0
+            stats['losses'] =0  
+            stats['draws'] = 0
+            stats['episodes'] = 0
     
     print("Training Done.")
+    print(f'stats: W/L/D: {total_wins}/{total_losses}/{total_draws}')
     return agent
 
 

@@ -40,7 +40,7 @@ def play(player1 , player2):
     
         if done:
         
-            winner = 'player1 winning' if reward == '1' and current_player == 'player1' else 'player2 winning'
+            winner = 'player1 winning' if game.winner == 1   else 'player2 winning'
             if len(game.get_valid_moves()) == 0: winner = "a draw"
             game.print_state()
 
@@ -63,4 +63,4 @@ if __name__ == "__main__":
     player1 = Minimax.minimax(0)
     player2 = Minimax.minimax(8)
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
-    play(True, trained_agent)
+    play(player1, trained_agent)
