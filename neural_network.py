@@ -92,7 +92,7 @@ class DQNAgent:
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
         self.epsilon_min = 0.05      # Minimum epsilon rate for exploration during training
-        self.epsilon_decay = 0.995  # Decay rate for epsilon
+        self.epsilon_decay = 0.9997  # Decay rate for epsilon
 
         self.batch_size = 128 # Batch size for training
         self.gamma = 0.99   # Discount factor for future rewards
@@ -181,7 +181,7 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(700): # Train for 1000 games
+    for episode in range(101): # Train for 1000 games
         
         state = game.reset()
         total_reward = 0

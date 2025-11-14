@@ -439,7 +439,7 @@ class minimax:
             if best_evaluation is None or child_value * current_player > best_evaluation * current_player: # compares both and update is necessary
                 best_evaluation = child_value
                 best_column = column
-            elif child_value * current_player > best_evaluation * current_player and abs(best_column-3) < abs(column-3): # if same evaluation, prioritize center move
+            elif child_value * current_player > best_evaluation * current_player and abs(best_column-3) > abs(column-3): # if same evaluation, prioritize center move
                 best_evaluation = child_value
                 best_column = column
                
