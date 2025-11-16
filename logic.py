@@ -1,6 +1,7 @@
 import numpy as np
 
-
+ # now only the win and loss give a reward. Should give a reward based on how good the position is
+ # we are now only guessing the hyperparameters. should use grid-search or random search
 class Connect4:
     
     def __init__(self):
@@ -44,12 +45,13 @@ class Connect4:
         
         if col not in self.get_valid_moves():
             raise ValueError(f"Cannot make illegal move: {col}!")
-        
+        #print(f'move in column {col}')
         row = self.get_lowest_open_row(col)
         self.board[row, col] = self.current_player
         self.last_move = (row, col)
         self.move_count += 1
         reward = 0
+
 
         # check for win
         if self.check_winner(row, col, self.current_player):
@@ -61,7 +63,7 @@ class Connect4:
         # check for draw
         if self.move_count == 42:
             self.game_over = -1
-            reward = 0
+            reward = 1
             return self.get_state(), reward, self.game_over
 
         self.current_player *= -1 # Switch player
@@ -109,3 +111,16 @@ class Connect4:
                     return True
         
         return False
+    
+    def print_state(self):
+        print(f'state of the board after: {self.move_count} moves. made by: {0-self.current_player}, ')
+        for row in self.board:
+            for element in row:
+                if element ==-1:
+                    element =2
+                print(element , end=' ')
+            print("")
+        print("")
+
+        
+    

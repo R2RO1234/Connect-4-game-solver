@@ -1,5 +1,5 @@
 from logic import Connect4
-
+import Minimax
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -8,12 +8,13 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque   # NOTE: deque is a double-ended queue where you can add/remove from both ends of the list
 
+# PLEASE IMPLEMENT RANDOM SEARCH FOR THE HYPERPARAMETERS
 
 class DQN(nn.Module): # Base class for all neural networks in PyTorch (nn.Module = parent class of DQN)
     
     def __init__(self, input_shape: int, move_count: int):
         super(DQN, self).__init__()   # Calls parent class of DQN (nn.Module) (Initializes self as nn.Module object?)
-
+        
         self.input_shape = input_shape
         self.move_count = move_count
 
@@ -51,6 +52,7 @@ class DQN(nn.Module): # Base class for all neural networks in PyTorch (nn.Module
 
         # Output vector
         x = self.fc4(x)
+    
 
         return x
     
@@ -70,7 +72,7 @@ class ReplayBuffer:
         return len(self.buffer)
         
 class DQNAgent:
-    def __init__(self, input_shape, move_count, lr=0.001): # lr = learning rate
+    def __init__(self, input_shape, move_count, lr=0.0005): # lr = learning rate
         self.input_shape = input_shape
         self.move_count = move_count
         self.device = th.device("cuda" if th.cuda.is_available() else "cpu") # For GPU/CPU management if available
@@ -86,14 +88,16 @@ class DQNAgent:
 
         self.criterion = nn.MSELoss() # Sets loss function to Mean Squared Error (good for Q-value prediction)
 
-        self.buffer = ReplayBuffer(10000) # Buffer of size 10000
+        self.buffer = ReplayBuffer(30000) # Buffer of size 10000
 
         self.epsilon = 1.0          # Initial epsilon rate (start with random moves)
-        self.epsilon_min = 0.1      # Minimum epsilon rate for exploration during training
-        self.epsilon_decay = 0.995  # Decay rate for epsilon
+        self.epsilon_min = 0.05      # Minimum epsilon rate for exploration during training
+        self.epsilon_decay = 0.9997  # Decay rate for epsilon
 
-        self.batch_size = 32 # Batch size for training
-        self.gamma = 0.99    # Discount factor for future rewards
+        self.batch_size = 128 # Batch size for training
+        self.gamma = 0.99   # Discount factor for future rewards
+
+        
 
     def select_action(self, state, valid_moves):
         if random.random() < self.epsilon:
@@ -105,7 +109,7 @@ class DQNAgent:
                                                                             # batch dimension) because NN expects batches of inputs, ie. (2, 6, 7) -> (1, 2, 6, 7)
                 q_values = self.policy_net(state) # Passes state through policy network to get Q-values for each possible action (column)
                 q_values = q_values.cpu().numpy()[0] # Moves tensor back to CPU and converts to numpy array. "[0]" removes batch dimension.
-
+                
                 # Only consider valid moves
                 valid_q_values = {move: q_values[move] for move in valid_moves}
                 best_move = max(valid_q_values, key=valid_q_values.get) # Chooses the move with the highest Q-value among valid moves
@@ -134,9 +138,14 @@ class DQNAgent:
 
         # Compute next Q values from target network
         with th.no_grad():
-            next_q_values = self.target_net(next_states).max(1)[0]
+            next_actions = self.policy_net(next_states).argmax(1)
+            next_q_values = self.target_net(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()
+            #next_q_values = self.target_net(next_states).max(1)[0] # original
+
+
             # If done, no next Q value
-            target_q_values = rewards + ~dones * self.gamma * next_q_values
+            #target_q_values = rewards + ~dones * self.gamma * next_q_values
+            target_q_values = rewards + (1 - dones.float()) * self.gamma * next_q_values
 
         loss = self.criterion(current_q_values.squeeze(), target_q_values) # Compute loss between current and target Q values
 
@@ -146,7 +155,7 @@ class DQNAgent:
 
         # Gradually decrease epsilon
         if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+                self.epsilon *= self.epsilon_decay
         
     def update_target_network(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -158,6 +167,12 @@ class DQNAgent:
 def train_dqn_agent():
     game = Connect4()
     agent = DQNAgent(input_shape=(2, 6, 7), move_count=7)
+    Opponent = Minimax.minimax(0)
+
+    total_wins = 0
+    total_losses = 0
+    total_draws =0
+    
 
     stats = {
         'episodes': 0,
@@ -166,51 +181,74 @@ def train_dqn_agent():
         'draws': 0
     }
 
-    for episode in range(1000): # Train for 1000 games
+    for episode in range(101): # Train for 1000 games
+        
         state = game.reset()
         total_reward = 0
         steps = 0
-
+        
+        
         while True:
             # Agent selects action
-            valid_moves = game.get_valid_moves()
-            action = agent.select_action(state, valid_moves)
+            if game.current_player ==1 : 
+                valid_moves = game.get_valid_moves()
+                action = agent.select_action(state, valid_moves)
+            else:
+                action = Opponent.choose_move(game.board, game.current_player)
+
+            
 
             # Execute action
             next_state, reward, done = game.make_move(action)
+            
 
             # Store experience in replay buffer
-            agent.save_experience(state, action, reward, next_state, done)
 
             # Train the agent
             agent.train_step()
-
+            if reward ==0 and game.game_over == 1 and done != 0:
+                reward = 1
             # Update statistics
             total_reward += reward
             steps += 1
-            state = next_state
 
             if done != 0:
                 # Update win/loss statistics
-                if reward == 1:
+                if game.winner == 1:
                     stats['wins'] += 1
-                elif reward == 0 and game.game_over == -1:
-                    stats['draws'] += 1
-                else:
+                    total_wins +=1
+                elif game.winner == -1:
                     stats['losses'] += 1
+                    total_losses+=1
+                    reward = -2
+                else:
+                    stats['draws'] += 1
+                    total_draws +=1
+
                 stats['episodes'] += 1
                 break
+            
+            agent.save_experience(state, action, reward, next_state, done)
+            state = next_state
 
         # Update target network every 10 episodes
         if episode % 10 == 0:
             agent.update_target_network()
+           
         
-        # Print stats every 100 episodes
+        # Print stats every 100 episodes, and reset stats
         if episode % 100 == 0:
             win_rate = stats['wins'] / max(1, stats['episodes']) * 100
-            print(f"Episode {episode}: Win Rate = {win_rate:.2f}%, Epsilon = {agent.epsilon:.3f}")
+            win_rate = stats['wins']
+
+            print(f"Episode {episode}: Win Rate = {win_rate:.2f}%, Epsilon = {agent.epsilon:.3f}, W/L/D:{stats['wins']}/{stats['losses']}/{stats['draws']}")
+            stats['wins']=0
+            stats['losses'] =0  
+            stats['draws'] = 0
+            stats['episodes'] = 0
     
     print("Training Done.")
+    print(f'stats: W/L/D: {total_wins}/{total_losses}/{total_draws}')
     return agent
 
 
@@ -225,8 +263,10 @@ def test_agent(agent, num_games=10):
         # Randomly decide who goes first
         if random.random() < 0.5:
             current_player = 'agent'
+            print("the agent plays first")
         else:
             current_player = 'random'
+            print("the agent plays second")
         
         while True:
             if current_player == 'agent':
@@ -257,4 +297,8 @@ def test_agent(agent, num_games=10):
 if __name__ == "__main__":
     trained_agent = train_dqn_agent()
     test_agent(trained_agent)
+    
+   
+    
 
+    
