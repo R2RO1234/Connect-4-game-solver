@@ -184,6 +184,3 @@ if __name__ == "__main__":
     #test_function(mini.check_winner_accross_board , test_winner)
     boards = [board_evaluate, board_evaluate1, board_evaluate2, board_evaluate3,board_evaluate4,board_evaluate5 ]
     test_evaluation(boards)
-
-
-    
