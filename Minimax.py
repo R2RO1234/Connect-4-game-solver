@@ -7,7 +7,7 @@ TRUE_INFINITY = 1000
 # find a way to generate random board states, possibly using different parameters
 
 class minimax:
-    def __init__(self, depth : int , distance_weights =  [1,1,1,1], epsilon = Infinity ,opponent_multiplier = 1 , sequence_values  = [1,2], column_to_consider = True, use_permanent_evaluation = False ):
+    def __init__(self, depth : int , distance_weights =  [1,1,1,1], epsilon = Infinity ,opponent_multiplier = 1 , sequence_values  = [1,2], column_to_consider = True ):
         self.depth = depth
         self.saved = {}
         # parameter : list of weights of the value of sequences on these columns. example: [1 ,1 , 0.8 , 0.6], and the index is the distance from the middle
@@ -25,12 +25,8 @@ class minimax:
         if len(sequence_values) != 2: raise ValueError("the lenght of sequence_values must be 2")
         self.sequence_values = sequence_values
 
-       
-        self.use_permanent_evaluation = use_permanent_evaluation
         # in the dict, if this is a winning board, the suggested move is -1
         # if this is a draw, the suggested move is -2
-
-        # still needs to optimize to reach higher depth. maximum now is (7) for about 15 seconds
 
         # move ordering
         # bitboard representation
@@ -223,7 +219,6 @@ class minimax:
             moves_to_check = self.get_valid_moves(possible_moves)
 
         if moves_to_check == []: # no more valid moves, that means its a draw
-            print("there is a draw in this position")
             self.save_evaluation(board , 0 , 100 , -2 , current_player )
             return 0 
         
@@ -233,7 +228,7 @@ class minimax:
         
         for column in moves_to_check:
             
-            open_row = self.get_lowest_open_row(column, board)  
+            open_row = possible_moves[column]
             
             board[open_row,column] = current_player
             possible_moves[column] -=1
@@ -355,40 +350,47 @@ class minimax:
     
 
 
-    def choose_move(self , board ,current_player):# calls minimax and returns the column in which to play 
+    def choose_move(self , board ,current_player , return_eval = False):# calls minimax and returns the column in which to play 
         # calls minimax on all children, checks max value and return the column in which the max value was choosen
         # returns -1 if the game is a win for either player, or -2 if the game is a draw
-
         
-        #data = self.is_board_saved(board, current_player) # cbeck if board was already computed
-        #if data is not None:
-        #    return data[3] # if it is saved, return the recommended move
-        
+        self.saved  = {} # if we dont reset it everytime, It will be bad  
         
         end_of_game = self.check_winner_accross_board(board) # (win , who_won)
         winner , player_winner = end_of_game
         if winner: 
-            print("there is a winner")
-            #self.save_evaluation(board , Infinity*player_winner , 100 , -1 , 1)
-            #self.save_evaluation(board , Infinity*player_winner , 100 , -1 , -1)
+            if return_eval: return (-1 , player_winner)
             return -1 # no move to make,
         
         possible_moves = compute_open_rows(board)
 
-        #  mandatory moves is a array of columns such tha
+      
         moves_to_do = self.check_mandatory_moves(board,possible_moves)
+        # what to do here? either call choose move on this one and return the evaluation. or return minimax
         
-        if len(moves_to_do) == 1: return moves_to_do[0]
-
         if len(moves_to_do) ==0: # no mandatory moves to do, switch to valid moves only
             moves_to_do = self.get_valid_moves(possible_moves)
+
+
+        if len(moves_to_do) == 1: 
+            if not return_eval: return moves_to_do[0]
+
+            move = moves_to_do[0]        # single column index
+            row = possible_moves[move]   # row to play in that column
+            column = move
+
+            board[row,column] = current_player
+            possible_moves[column] -=1
+            child_value = self.minimax(board ,current_player*-1, self.depth , (row , column), -TRUE_INFINITY , TRUE_INFINITY,possible_moves)
+            possible_moves[column] +=1
+            board[row,column] = 0
+            return (moves_to_do[0] , child_value)  
         
-        if len(moves_to_do) == 1: return moves_to_do[0]    
         
         if len(moves_to_do) == 0: 
-            print("its a draw")
             self.save_evaluation(board , 0 , 100 , -2 , current_player)
-            return -2
+            if return_eval: return (-2 , 0)
+            return -2 
         
 
         alpha,beta = -TRUE_INFINITY , TRUE_INFINITY
@@ -414,6 +416,7 @@ class minimax:
 
             if me == Infinity:  # if the current player has a infinity value, break 
                 self.save_evaluation(board , child_value , 100 , column , current_player)
+                if return_eval: return (column , child_value)
                 return column
             
             if best_evaluation is None or me > best_evaluation * current_player: # compares both and update is necessary
@@ -434,7 +437,8 @@ class minimax:
             
                
                 
-        self.saved  = {}    
+        
+        if return_eval: return (best_column , best_evaluation)
         
         return best_column
         
@@ -524,6 +528,24 @@ class minimax:
             
             row -=1
         return (False,1)
+    
+    def to_dict(self):
+        return {
+            "depth": self.depth,
+            "distance_weights": self.distance_weights,
+            "epsilon": self.epsilon,
+            "opponent_multiplier": self.opponent_multiplier,
+            "sequence_values": self.sequence_values
+        }
+    @classmethod
+    def from_dict(cls, d):
+        return cls(
+            depth=d["depth"],
+            distance_weights=d["distance_weights"],
+            epsilon=d["epsilon"],
+            opponent_multiplier=d["opponent_multiplier"],
+            sequence_values=d["sequence_values"]
+        )
 
 
 
@@ -531,11 +553,6 @@ def reverseBoard(board): # column 0->6, 1->5, etc
     return board[:, ::-1]
 
 
-def get_lowest_open_row(self, col, board):
-    for row in range(5, -1, -1):
-        if board[row, col] == 0:
-            return row
-    return None
 
 
 def check_winner(board , row, col, player):  

@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 *.npy
-hashes.txt
+output/
+temp/
