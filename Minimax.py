@@ -456,13 +456,13 @@ class minimax:
         
         
         
-        hashed = self.fast_hash(board, current_player)
+        hashed = fast_hash(board, current_player)
         if hashed not in self.saved or depth >= self.saved[hashed][1]:
             self.saved[hashed] = (minimax_evaluation , depth , recommended_move , current_player)
         # maybe also dont save if reversed board is already in the dictionnary
     
     def is_board_saved(self,board , current_player):
-        hashed = self.fast_hash(board,current_player)
+        hashed = fast_hash(board,current_player)
         if hashed in self.saved:
           
             data  = self.saved[hashed]
@@ -470,7 +470,7 @@ class minimax:
             #print(f'board already computed at depth {depth} with evaluation = {evaluation}. Player {current_player} to move at column {recommended_move}')
             return data # return the data
         
-        reverseHash = self.fast_hash(self.reverseBoard(board),current_player)
+        reverseHash = fast_hash(reverseBoard(board),current_player)
         
         if reverseHash in self.saved:
            
@@ -527,12 +527,10 @@ class minimax:
 
 
 
-def reverseBoard(self , board): # column 0->6, 1->5, etc
+def reverseBoard(board): # column 0->6, 1->5, etc
     return board[:, ::-1]
 
-def fast_hash(self , board: np.ndarray , current_player) -> int:
-    return hash((board.tobytes() , current_player))
-    
+
 def get_lowest_open_row(self, col, board):
     for row in range(5, -1, -1):
         if board[row, col] == 0:

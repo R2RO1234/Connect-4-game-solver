@@ -1,37 +1,38 @@
+from typing import List
 import Minimax
 from logic import Connect4
 import random
 import numpy as np
 import zlib
 import time
-def write_boards(board_list ,src):
+def write_boards(board_list  ,src: str):
     with open(src , "wb") as f:
          np.save(f, board_list)
        
-def read_boards(scr):
+def read_boards(scr : str):
     with open(scr , "rb") as f:
         a = np.load(f)
     return a
-def write_hashes(hash_list,src):
-    with open(src , "w") as f:
+def write_hashes(hash_list : List[str],src : str, mode: str):
+    with open(src , mode) as f:
         for h in hash_list:
             f.write(f"{h}\n")
        
-def read_hashes(src):
+def read_hashes(src : str):
     with open(src , "r") as f: 
         hashes = [int(line.strip()) for line in f]
     return hashes
 
-def get_dict_from_files(keys_src , values_src):
+def get_dict_from_files(keys_src :str , values_src: str):
     keys = read_hashes(keys_src)
     values = read_boards(values_src)
     return dict(zip(keys,values))
 
 
 
-def compute_board_states(board_states = {}):
+def compute_board_states(board_states = {}, num_games = 10000):
     total_moves = len(board_states)
-    for i in range(10000): # simulate 20 games
+    for i in range(num_games): # simulate num_iterations games
         player_1 = Minimax.get_random_minimax()
         player_2 = Minimax.get_random_minimax()
         #print("player1: "+ str(player_1))
@@ -39,7 +40,7 @@ def compute_board_states(board_states = {}):
         previous = len(board_states)
         current_player = 1
         game = Connect4()
-        _ = game.reset()
+        game.reset()
         num_moves = 0
         while True:
             agent = player_1 if current_player == 1 else player_2
@@ -48,6 +49,7 @@ def compute_board_states(board_states = {}):
             #if random.random() < 0.005: game.print_state()
             state, reward, done = game.make_move(action)
             current_player*=-1
+            
             hashed = zlib.adler32(game.board.tobytes())
             board_copy = game.board.copy()
             if hashed not in board_states: 
@@ -72,12 +74,14 @@ def compute_more_boards_and_write():
 
     board_list = list(states.values())
     before = time.time()
-    write_hashes(list(states.keys()),"hashes.txt")
+    write_hashes(list(states.keys()),"hashes.txt", "w")
     during = time.time()
     write_boards(board_list , "boards.npy")
     print(f'saving the hash: {during-before}, saving the boards: {time.time()-during}')
     
 def load_boards_and_evaluate(depth ,num_evaluation):
+
+
     dictionnary = get_dict_from_files("hashes.txt", "boards.npy")
     subset = random.choices(list(dictionnary.values()) , k = num_evaluation)
     agent = Minimax.minimax(depth)
@@ -85,10 +89,10 @@ def load_boards_and_evaluate(depth ,num_evaluation):
     total_time = 0
    
     for i , board in enumerate(subset):
+        start = time.time()
         num_pos = np.sum(board == 1)   # count of 1
         num_neg = np.sum(board == -1)  # count of -1
         turn = 1-2*( num_pos - num_neg) # if num_pos - num_neg ==0, then its player(1) turn. if num_pos - num_neg == 1, then its player(-1) turn
-        start = time.time()
         agent.choose_move(board, turn)
         elapsed = time.time() - start
         total_time += elapsed
@@ -96,7 +100,12 @@ def load_boards_and_evaluate(depth ,num_evaluation):
         
         print(f'evaluating board {i} took {elapsed:.4f}')
     print(f"Average time per choose_move: {total_time / num_evaluation:.6f} s")   
-               
 
-load_boards_and_evaluate(7 , 1000)
-#compute_more_boards_and_write()
+def evaluate_boards_and_save(agent, start_index, num_boards_to_compute):
+    boards_dict = get_dict_from_files("hashes.txt" , "boards.npy")
+    boards = List(boards_dict.values())
+    size = len(boards)
+    num_boards_to_compute = min(size - start_index , num_boards_to_compute) # ensure we dont go over the limit
+    to_evaluate = to_evaluate[start_index , start_index + num_boards_to_compute]
+    
+load_boards_and_evaluate(7, 100)
