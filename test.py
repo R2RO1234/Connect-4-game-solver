@@ -1,5 +1,8 @@
 import Minimax
 import numpy as np
+import board_dataset
+import os
+import shutil
 board_diagonal_right = (np.array([
     [ 0, 0, 0, 0, 0, 0, 0],
     [ 0, 0, 0, 0, 0, 0, 0],
@@ -178,9 +181,9 @@ def test_evaluation(lst):
         index+=1
 
 if __name__ == "__main__":
-    test_winner = [board_winner_diagonal, board_winner_diagonal_left ,board_winner_horizontal , board_winner_vertical]
-    test_mandatory = [board_diagonal_right , board_diagonal_left, board_horizontal , board_vertical,board_vertical_closed,board_vertical_up]
-    #test_function(mini.check_mandatory_moves , test_mandatory)
-    #test_function(mini.check_winner_accross_board , test_winner)
-    boards = [board_evaluate, board_evaluate1, board_evaluate2, board_evaluate3,board_evaluate4,board_evaluate5 ]
-    test_evaluation(boards)
+    agent = Minimax.minimax(7)
+    bd = board_dataset.BoardDataset("test1")
+    #bd.expand_dict_and_save(500)
+    bd.evaluate_remaining_boards(agent , 45 )
+    
+    # in the future, can join the two dataset from test1 and official
