@@ -1,3 +1,5 @@
+import time
+import zlib
 import Minimax
 import numpy as np
 import board_dataset
@@ -182,8 +184,31 @@ def test_evaluation(lst):
 
 if __name__ == "__main__":
     agent = Minimax.minimax(7)
-    bd = board_dataset.BoardDataset("test1")
-    #bd.expand_dict_and_save(500)
-    bd.evaluate_remaining_boards(agent , 45 )
+    bd = board_dataset.BoardDataset("with move ordering")
+    bd.expand_dict_and_save(100)
+    bd.evaluate_remaining_boards(agent,3)
     
-    # in the future, can join the two dataset from test1 and official
+    
+    boards =  list(bd.load_dict().values())
+    hashes = list(bd.load_dict().keys())
+    evaluated = bd.evaluated_boards
+    for i in range(130):
+        try:
+            assert zlib.adler32(boards[i].tobytes()) == hashes[i]
+        except: 
+            print("hashing did not work")
+        board = boards[i]
+        num_pos = np.sum(board == 1)
+        num_neg = np.sum(board == -1)
+        turn = 1 - 2 * (num_pos - num_neg)
+
+        agent.choose_move(board, turn, True)
+        try:
+            before = time.time()
+            evaluation = agent.choose_move(board, turn, True)[1]
+            after = time.time()
+            np.testing.assert_almost_equal(evaluation, evaluated[i])
+            print(f'board number {i} worked. evaluated it in {(after - before):.4f}s')
+        except:
+            #print(board)
+            print(f'board {i} is invalid. expected {int(evaluated[i])} but got {int(evaluation)}')

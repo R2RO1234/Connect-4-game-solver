@@ -1,3 +1,4 @@
+import re
 import generate_boards
 import os
 import numpy as np
@@ -56,28 +57,38 @@ class BoardDataset:
         already_evaluated = len(self.evaluated_boards)
         generate_boards.evaluate_boards_in_batches(agent,self.get_values_dict() , num_batches , 
                                                    self.evaluated_boards_dir , self.evaluated_metadata_dir , already_evaluated)
+        self.evaluated_boards = self.load_evaluated_boards()
 
     def get_num_non_evaluated_boards(self):
         self.load_dict()
         self.load_evaluated_boards()
         return len(self.boards_dict) - len(self.evaluated_boards)
     
-    def load_evaluated_boards(self) -> np.ndarray:
-        """
-        Loads all .npy files of the dataset into a single NumPy array.
-        Raises:
-            ValueError: If any file in the directory is not a .npy file.
-        """
-        all_boards = []
-        
-        for file_name in sorted(os.listdir(self.evaluated_boards_dir)):
-            file_path = os.path.join(self.evaluated_boards_dir, file_name)
-            if os.path.isfile(file_path):
-                if not file_name.endswith(".npy"):
-                    raise ValueError(f"Unexpected file type found: {file_name}")
-                all_boards.append(np.load(file_path))
-        
-        if not all_boards:
-            return np.array([])  # empty directory
-        self.evaluated_boards =  np.concatenate(all_boards, axis=0)
+    def load_evaluated_boards(self):
+        files = []
+        for name in os.listdir(self.evaluated_boards_dir):
+            if not name.endswith(".npy"):
+                continue
+            
+            m = re.match(r"evaluated_boards_(\d+)-(\d+)\.npy", name)
+            if not m:
+                raise ValueError(f"Invalid filename format: {name}")
+            
+            start = int(m.group(1))
+            files.append((start, name))
+
+        # Sort by numeric start index
+        files.sort(key=lambda x: x[0])
+
+        arrays = []
+        for _, fname in files:
+            print("loading", fname)
+            arrays.append(np.load(os.path.join(self.evaluated_boards_dir, fname)))
+
+        if not arrays:
+            return np.array([])
+
+        self.evaluated_boards = np.concatenate(arrays, axis=0)
         return self.evaluated_boards
+    
+    # in the future, should make a function to join two Board datasets

@@ -262,9 +262,10 @@ board_horizontal = np.array([
     [0, 0, 0, 0, 0,0,0],
     [0, 0, 0, 0, 0,0,0],
     [0, 0, 0, 0, 0,0,0],
-    [0, 0, 0, 0, 0,0,0],
-    [0,-1,-1,-1, 0,0,0],
-    [0, 1, 1, 1,-1,0,0]
+    [0, 0, 1, 1, 0,0,0],
+    [1,-1,-1,-1, 1,0,0],
+    [-1, 1, 1, 1,-1,-1,0]
 ], dtype=int)
         
-test_minimax(9, board_vertical_up , 25)    
+test_minimax(6, board_vertical_up , 25)   
+test_minimax(9, board_horizontal , 25)     

@@ -1,3 +1,4 @@
+import numpy as np
 import neural_network
 from logic import Connect4
 import Minimax
@@ -58,9 +59,19 @@ def play(player1 , player2):
 
 if __name__ == "__main__":
 
-    trained_agent = neural_network.train_dqn_agent()
-    trained_agent.epsilon = 0
-    player1 = Minimax.minimax(0)
+    #trained_agent = neural_network.train_dqn_agent()
+    #trained_agent.epsilon = 0
+    player1 = Minimax.minimax(15)
     player2 = Minimax.minimax(8)
     #neural_network.th.save(trained_agent.state_dict() , "saved_model.pth")
-    play(player1, trained_agent)
+    #play(player1, player2)
+    
+    board = np.array([
+    [0, 0, 1, 1, 1, -1, 0],
+    [0, 0, -1, 1, 1, -1, 0],
+    [0, 0, 1, -1, -1, 1, 0],
+    [0, 0, -1, 1, 1, -1, 0],
+    [0, 0, 1, -1, -1, -1, 0],
+    [0, 0, 1, 1, -1, -1, 0]
+])
+    print(player1.choose_move(board ,1 , True ))

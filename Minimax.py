@@ -221,8 +221,7 @@ class minimax:
         if moves_to_check == []: # no more valid moves, that means its a draw
             self.save_evaluation(board , 0 , 100 , -2 , current_player )
             return 0 
-        
-        random.shuffle(moves_to_check) # randomize the child search order
+        moves_to_check = order_moves(moves_to_check, current_player == -1)
         best_evaluation = None
         best_column = None
         
@@ -395,9 +394,10 @@ class minimax:
 
         alpha,beta = -TRUE_INFINITY , TRUE_INFINITY
         
-        eval = self.evaluate_position(board,current_player)
+        #eval = self.evaluate_position(board,current_player)
+        moves_to_do = order_moves(moves_to_do, current_player == -1 )
         
-        random.shuffle(moves_to_do) # randomize the child search order
+
         best_evaluation = None
         best_column = None
         
@@ -429,6 +429,7 @@ class minimax:
             if current_player == 1:
                 alpha = max(alpha, child_value)
             else:
+                pass
                 beta = min(beta, child_value)
 
             if alpha >= beta:
@@ -630,5 +631,6 @@ def get_random_minimax():
 
     return mini
 
-
+def order_moves(moves : list[int] , reversed ): # maybe add the columns to order 
+    return sorted(moves ,reverse= False , key= lambda x: abs(x-3) )
 
