@@ -87,7 +87,7 @@ def generate_board_states(board_states = {}, num_games = 10000) -> dict:
 
 
 
-def evaluate_boards(agent, boards_subset):
+def evaluate_boards(agent : Minimax.minimax, boards_subset):
     """
     Evaluate a contiguous block of boards.
     Returns:
