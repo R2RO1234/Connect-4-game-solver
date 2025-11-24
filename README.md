@@ -1,20 +1,16 @@
 # MAIS202-Connect-4-game-solver
 Final team project for MAIS 202 Bootcamp.
-# OKaraoke
 
-Open-Source Karaoke from any YouTube video.
+## ensuring dependencies
+python: 
+pip install -r requirements.txt
 
-
-## Building the frontend (dist)
-
-The backend expects the `frontend/dist` folder to be built and present.
-
-```
+node:
 cd frontend
-npm run build
-```
+npm i -D daisyui@latest
+npm install tailwindcss@latest @tailwindcss/vite@latest daisyui@latest
 
-## Backend env
+## Running the application for development
 cd backend
 start.cmd
 

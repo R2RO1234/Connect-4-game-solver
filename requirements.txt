@@ -1,4 +1,7 @@
 numpy
 matplotlib
 torch
-
+fastapi
+pydantic
+zlib
+tqdm
