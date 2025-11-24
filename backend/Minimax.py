@@ -370,7 +370,8 @@ class minimax:
         if len(moves_to_do) ==0: # no mandatory moves to do, switch to valid moves only
             moves_to_do = self.get_valid_moves(possible_moves)
 
-
+        #if random.random < 0.12:
+            #return (1 , random.choice(moves_to_do))
         if len(moves_to_do) == 1: 
             if not return_eval: return moves_to_do[0]
 
@@ -617,16 +618,14 @@ def fast_hash(board: np.ndarray , current_player) :
         return hash((board.tobytes() , current_player))
 
 def get_random_minimax():
-    depth = random.randint(1,2)
-    opponent_multiplier = random.uniform(0.2,3)
-    sequence_values = [random.randint(1,10) , random.randint(1,10)]
-    column_to_consider = bool(random.getrandbits(1))
-    distance_weights = [random.uniform(0.1,3) for _ in range(4)]
+    depth = random.randint(1, 4)  # shallow enough to allow mistakes, not too deep
+    opponent_multiplier = random.uniform(-1, 2)  # sometimes overvalue opponent threats
+    sequence_values = [random.randint(-2, 2), random.randint(-3, 3)]  # length-2 and length-3 sequences weighted differently
+    distance_weights = [random.uniform(-2, 2.0) for _ in range(4)]  # favor center sometimes, edges sometimes
 
     mini = minimax(depth)
     mini.opponent_multiplier = opponent_multiplier
     mini.sequence_values = sequence_values
-    mini.column_to_consider = column_to_consider
     mini.distance_weights = distance_weights
 
     return mini
