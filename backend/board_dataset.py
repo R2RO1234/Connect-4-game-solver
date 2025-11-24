@@ -1,5 +1,5 @@
 import re
-import generate_boards
+import backend.board_Generator as board_Generator
 import os
 import numpy as np
 
@@ -34,15 +34,15 @@ class BoardDataset:
         self.boards_dict = self.load_dict()
 
     def load_dict(self)-> dict:
-        self.boards_dict = generate_boards.get_dict_from_files(self.hashes_file , self.boards_file)
+        self.boards_dict = board_Generator.get_dict_from_files(self.hashes_file , self.boards_file)
         return self.boards_dict
 
     def save_boards(self):
-        generate_boards.write_boards(self.get_values_dict() ,self.boards_file )
-        generate_boards.write_hashes(self.get_keys_dict() ,self.hashes_file)
+        board_Generator.write_boards(self.get_values_dict() ,self.boards_file )
+        board_Generator.write_hashes(self.get_keys_dict() ,self.hashes_file)
     
     def expand_dict_and_save(self, num_games):
-        self.boards_dict = generate_boards.generate_board_states(self.boards_dict , num_games)
+        self.boards_dict = board_Generator.generate_board_states(self.boards_dict , num_games)
         self.save_boards()
 
 
@@ -55,7 +55,7 @@ class BoardDataset:
     
     def evaluate_remaining_boards(self, agent, num_batches):
         already_evaluated = len(self.evaluated_boards)
-        generate_boards.evaluate_boards_in_batches(agent,self.get_values_dict() , num_batches , 
+        board_Generator.evaluate_boards_in_batches(agent,self.get_values_dict() , num_batches , 
                                                    self.evaluated_boards_dir , self.evaluated_metadata_dir , already_evaluated)
         self.evaluated_boards = self.load_evaluated_boards()
 

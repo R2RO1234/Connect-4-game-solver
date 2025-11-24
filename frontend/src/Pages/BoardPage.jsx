@@ -155,7 +155,7 @@ function BoardPage() {
             }
         }
         else {
-            const res = await fetch("http://localhost:8000/api/getMove", {
+            const res = await fetch("/api/getMove", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ board: board, model: playerType })

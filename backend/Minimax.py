@@ -633,3 +633,13 @@ def get_random_minimax():
 def order_moves(moves : list[int] , reversed ): # maybe add the columns to order 
     return sorted(moves ,reverse= False , key= lambda x: abs(x-3) )
 
+def get_player_to_play(board):
+    num_pos = np.sum(board == 1)
+    num_neg = np.sum(board == -1)
+    return 1 - 2 * (num_pos - num_neg)
+
+def get_valid_moves(board):
+    return [col for col in range(7) if board[0, col] == 0]
+
+def convertArray(arr : list[list[int]]):
+    return np.transpose(arr)

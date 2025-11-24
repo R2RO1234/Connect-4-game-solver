@@ -13,12 +13,13 @@ npm i -D daisyui@latest
 npm install tailwindcss@latest @tailwindcss/vite@latest daisyui@latest
 ```
 
+
+
 ## Running the application for development
 ```
 cd backend
-start.cmd
+start_server.cmd
 ```
-
 
 ## Running the frontend for development
 ```

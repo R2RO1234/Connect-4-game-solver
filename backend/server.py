@@ -4,12 +4,19 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 import Minimax
-import numpy as np
 from pydantic import BaseModel
 from enum import Enum
-from logic import Connect4
 from fastapi.middleware.cors import CORSMiddleware
+import agent
+import random
 
+
+def get_decent_minimax():
+    model = Minimax.minimax(random.randint(3,7))
+    model.opponent_multiplier = random.uniform(0.7 , 1.5)
+    model.distance_weights[0] = random.uniform(1 , 1.5)
+    model.distance_weights[1] = random.uniform(1 , 1.2)
+    return model
 class PlayerType(Enum):
     USER = 1
     CNN = 2
@@ -18,8 +25,10 @@ class PlayerType(Enum):
 
 app = FastAPI()
 
-model = Minimax.minimax(2)
-model1 = Minimax.minimax(10)
+model  =get_decent_minimax()
+ai_model = agent.AIPlayer("connect4_checkpoint_50.pth")
+
+
 
 origins = ["*"]
 
@@ -43,36 +52,41 @@ class RequestMove(BaseModel):
 # returns the new move, and the result of the move: or 3 for draw , 1 for player(1) win, or 2 for player(-1) win, 0 for nothing
 @app.post("/api/getMove")
 def getMove(request : RequestMove):
-    board = convertArray(request.board)
+    board = Minimax.convertArray(request.board)
     
-   
+    global model
     model_enum = PlayerType(request.model)
     
-    winner = model.check_winner_accross_board(board) #return (True,board[row,column])
+    winner = model.check_winner_accross_board(board) 
     if winner[0]: 
+        model  = get_decent_minimax()
         if winner[1] == -1: return {"column" : -1, "flag" : 2}
         return  {"column" : -1, "flag" :1 }
     
-    if not get_valid_moves(board): return {"column" : -1 , "flag" : 3}
+    if not Minimax.get_valid_moves(board): return {"column" : -1 , "flag" : 3}
 
-    computing = model1
+    computing = model
 
     if(model_enum == PlayerType.CNN):
         print("model_enum is a CNN")
-        computing  = model
+        computing  = ai_model
     
     elif model_enum == PlayerType.USER : print("its not supposed to be user")
 
     elif model_enum == PlayerType.MINIMAX: print("model_enum is a minimax")
     
-    to_play = get_player_to_play(board)
+    to_play = Minimax.get_player_to_play(board)
     col = computing.choose_move(board,to_play)
     row = Minimax.get_lowest_open_row(col, board)
     board[row,col] = to_play
     
     flag = 0 # nothing
-    if Minimax.check_winner(board , row, col, to_play): flag =  (1 - to_play) / 2 + 1 # somebody won
-    elif not get_valid_moves(board): flag = 3 # a draw
+    if Minimax.check_winner(board , row, col, to_play):
+        model  =get_decent_minimax()
+        flag =  (1 - to_play) / 2 + 1 # somebody won
+    elif not Minimax.get_valid_moves(board): 
+        flag = 3 # a draw
+        model  =get_decent_minimax()
     return  {"column" :col , "flag" : flag}
 
 
@@ -82,13 +96,6 @@ frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
 app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="frontend")
 
 
-def convertArray(arr : list[list[int]]):
-    return np.transpose(arr)
+print("server running on http://127.0.0.1:8000")
 
-def get_player_to_play(board):
-    num_pos = np.sum(board == 1)
-    num_neg = np.sum(board == -1)
-    return 1 - 2 * (num_pos - num_neg)
 
-def get_valid_moves(board):
-    return [col for col in range(7) if board[0, col] == 0]

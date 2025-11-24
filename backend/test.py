@@ -1,10 +1,5 @@
-import time
-import zlib
 import Minimax
 import numpy as np
-import board_dataset
-import os
-import shutil
 board_diagonal_right = (np.array([
     [ 0, 0, 0, 0, 0, 0, 0],
     [ 0, 0, 0, 0, 0, 0, 0],
