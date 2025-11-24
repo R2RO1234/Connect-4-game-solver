@@ -1,7 +1,6 @@
 numpy
 matplotlib
 torch
-fastapi
+fastapi[standard]
 pydantic
-zlib
 tqdm
