@@ -12,15 +12,12 @@ import random
 
 
 def get_decent_minimax():
-    model = Minimax.minimax(random.randint(3,7))
-    model.opponent_multiplier = random.uniform(0.7 , 1.5)
-    model.distance_weights[0] = random.uniform(1 , 1.5)
-    model.distance_weights[1] = random.uniform(1 , 1.2)
+    model = Minimax.minimax(random.randint(5,7))
     return model
 class PlayerType(Enum):
-    USER = 1
+    USER = 0
+    MINIMAX = 1
     CNN = 2
-    MINIMAX = 3
 
 
 app = FastAPI()

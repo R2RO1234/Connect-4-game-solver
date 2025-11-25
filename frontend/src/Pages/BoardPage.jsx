@@ -22,16 +22,25 @@ export function convertRole(player) {
             return "Unknown Player";
     }
 }
-
-const player1C = "seagreen"
-const player2C = "tomato"
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+const player1C = prefersDark ? "#9ceb78" : "red"
+const player2C = prefersDark ? "deeppink" : "seagreen"//#383d4a
+const boardBackground = prefersDark ? "#31384a" : "#f3f4f6"
+const emptytoken = prefersDark ? "#d1daed" : "white"
 
 function BoardPage() {
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
     const location = useLocation();
-    const { player1 = PlayerType.USER, player2 = PlayerType.CNN } = location.state || {}; // fallback if no state
+
+    let player1 = PlayerType.USER;
+    let player2 = PlayerType.CNN;
+
+    if (location.state) {
+        player1 = location.state.player1 || PlayerType.USER;
+        player2 = location.state.player2 || PlayerType.CNN;
+    }
 
     let sp1 = convertRole(player1)
     let sp2 = convertRole(player2)
@@ -141,9 +150,7 @@ function BoardPage() {
 
 
     async function fetch_and_apply(board, playerType, playerNumber, fake = true) {
-        for (const row of board) {
-            console.log(...row);
-        }
+
 
         let column;
 
@@ -166,7 +173,7 @@ function BoardPage() {
             let result = await res.json();
             column = result.column
             const flag = result.flag
-            console.log("what is result " + result)
+
             if (flag != 0) {
                 console.log("end of game: " + flag) //3 for draw , 1 for player(1) win, or 2 for player(-1) win, 0 for nothing
                 console.log("the flag is: " + EndGame[flag])
@@ -194,7 +201,6 @@ function BoardPage() {
     // ---------------------------
     // UI helpers
     // ---------------------------
-
     function resetBoard() {
         setBoardState([
             [0, 0, 0, 0, 0, 0],
@@ -229,7 +235,7 @@ function BoardPage() {
                 isOver={isOver}
             />
 
-            <div className="flex flex-row items-center justify-center">
+            <div className="flex flex-row items-center justify-center w-fit mx-auto p-5 rounded-xl" style={{ backgroundColor: boardBackground }}>
                 {boardState.map((value, index) => (
                     <Column
                         p1c={player1C}
@@ -237,6 +243,7 @@ function BoardPage() {
                         value={value}
                         index={index}
                         handleClick={handleClick}
+                        emptytoken={emptytoken}
                     />
                 ))}
             </div>

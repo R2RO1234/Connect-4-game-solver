@@ -23,6 +23,7 @@ function MainPage() {
                 <div className="flex-col flex justify-center gap-10 items-center">
                     <button onClick={() => playGame(PlayerType.USER, PlayerType.CNN)} class="btn w-40 h-10 text-xl">Play</button>
                     <button onClick={() => playGame(PlayerType.MINIMAX, PlayerType.CNN)} class="btn w-60 h-15 text-xl ">Neural network vs Minimax </button>
+                    <button onClick={() => playGame(PlayerType.USER, PlayerType.MINIMAX)} class="btn w-60 h-15 text-xl ">play vs Minimax </button>
                 </div>
 
 

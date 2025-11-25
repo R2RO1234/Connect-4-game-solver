@@ -41,7 +41,7 @@ function DisplayTurn({ current_player_type, currentPlayer, p1c, p2c, isFetching,
 
     return (
         <div className="flex flex-row justify-center items-center mb-5 gap-3 h-10">
-            <h1 className="text-4xl" style={{ color }}>
+            <h1 className="text-4xl font-bold" style={{ color }}>
                 {message}
             </h1>
 

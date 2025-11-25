@@ -5,7 +5,7 @@ import Square from './Square'
 
 
 
-function Column({ value, index, handleClick, p1c, p2c }) {
+function Column({ value, index, handleClick, p1c, p2c, emptytoken }) {
 
 
 
@@ -17,6 +17,7 @@ function Column({ value, index, handleClick, p1c, p2c }) {
                     value={v}
                     p1c={p1c}
                     p2c={p2c}
+                    emptytoken={emptytoken}
                 />
             ))}
         </div>
