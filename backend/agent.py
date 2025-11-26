@@ -1,4 +1,4 @@
-from MonteCarloSearchTree import MCTS
+from MonteCarloTreeSearch import MCTS
 from CNN_architecture import CNN
 import torch
 from logic import Connect4
