@@ -1,5 +1,5 @@
 import re
-import backend.board_Generator as board_Generator
+import board_Generator as board_Generator
 import os
 import numpy as np
 

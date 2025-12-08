@@ -12,7 +12,7 @@ import random
 
 
 def get_decent_minimax():
-    model = Minimax.minimax(random.randint(12,13))
+    model = Minimax.minimax(random.randint(9,11))
     return model
 class PlayerType(Enum):
     USER = 0

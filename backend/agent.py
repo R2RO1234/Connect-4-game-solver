@@ -7,8 +7,9 @@ import numpy as np
 
 class AIPlayer:
     def __init__(self,filename):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         trained_network = CNN(num_res_blocks=5, channels=128)
-        trained_network.load_state_dict(torch.load(filename, map_location='cpu'))
+        trained_network.load_state_dict(torch.load(filename, map_location=device))
         trained_network.eval()
         self.mc = MCTS(trained_network, num_simulations=400)
         self.game = Connect4()

@@ -19,7 +19,7 @@ npm install tailwindcss@latest @tailwindcss/vite@latest daisyui@latest
 
 
 ## Running the application
-Open two separate terminals, one for frontend, one for backend.
+Open a cmd
 
 Backend:
 ```
@@ -28,16 +28,16 @@ start_server.cmd
 ```
 If start_server.cmd does not work run ./start_server.cmd instead.
 
-start_server builds the frontend and starts the server. If your frontend is already built (npm run dev), just use
+start_server builds the frontend and starts the server. If your frontend is already built (npm run build), just use
 ```
 fastapi dev server.py
 ```
+When server is live, go to http://127.0.0.1:8000.
 
-Frontend:
+### running frontend for development:
 ```
 cd frontend
 npm run dev
 ```
 
-When server is live, go to http://127.0.0.1:8000.
 
