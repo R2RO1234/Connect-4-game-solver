@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
     ai_model = await loop.run_in_executor(
         None, agent.AIPlayer, "connect4_checkpoint_50.pth"
     )
+    print("CNN AI model loaded")
     yield
     # optional: cleanup code here
 
@@ -76,7 +77,12 @@ def getMove(request : RequestMove):
 
     if(model_enum == PlayerType.CNN):
         print("model_enum is a CNN")
-        computing  = ai_model
+        if ai_model is None:
+        # fallback: either return an error or use minimax instead
+            print("CNN not ready yet, using fallback minimax")
+            computing = get_decent_minimax()
+        else:
+            computing = ai_model
     
     elif model_enum == PlayerType.USER : print("its not supposed to be user")
 
