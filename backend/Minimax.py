@@ -493,14 +493,14 @@ class minimax:
         
         column = 0 
         row = len(board)-1
-  
+
         
         while column <=6: # consider changing for board[0].length-1
             if board[row,column] == 0 or row <0:
                 column+=1 # change column immediately since the remaining in that column are all 0
                 row = len(board)-1
                 continue 
-           
+        
             sequence  = self.check_horizontal_sequence(board ,(row,column))
             sequence_len, open_left, open_right = sequence
             start_of_sequence = (column ==0 or board[row,column-1] != board[row,column])

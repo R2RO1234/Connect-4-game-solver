@@ -9,10 +9,12 @@ from enum import Enum
 from fastapi.middleware.cors import CORSMiddleware
 import agent
 import random
+import asyncio
+from contextlib import asynccontextmanager
 
 
 def get_decent_minimax():
-    model = Minimax.minimax(random.randint(9,11))
+    model = Minimax.minimax(8)
     return model
 class PlayerType(Enum):
     USER = 0
@@ -20,12 +22,20 @@ class PlayerType(Enum):
     CNN = 2
 
 
-app = FastAPI()
 
-model  =get_decent_minimax()
-ai_model = agent.AIPlayer("connect4_checkpoint_50.pth")
+ai_model = None
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global ai_model
+    loop = asyncio.get_running_loop()
+    ai_model = await loop.run_in_executor(
+        None, agent.AIPlayer, "connect4_checkpoint_50.pth"
+    )
+    yield
+    # optional: cleanup code here
 
-
+app = FastAPI(lifespan=lifespan)
+dummy_model = Minimax.minimax(1)
 
 origins = ["*"]
 
@@ -51,18 +61,18 @@ class RequestMove(BaseModel):
 def getMove(request : RequestMove):
     board = Minimax.convertArray(request.board)
     
-    global model
+   
     model_enum = PlayerType(request.model)
     
-    winner = model.check_winner_accross_board(board) 
+    winner = dummy_model.check_winner_accross_board(board) 
     if winner[0]: 
-        model  = get_decent_minimax()
+        
         if winner[1] == -1: return {"column" : -1, "flag" : 2}
         return  {"column" : -1, "flag" :1 }
     
     if not Minimax.get_valid_moves(board): return {"column" : -1 , "flag" : 3}
 
-    computing = model
+    
 
     if(model_enum == PlayerType.CNN):
         print("model_enum is a CNN")
@@ -70,7 +80,9 @@ def getMove(request : RequestMove):
     
     elif model_enum == PlayerType.USER : print("its not supposed to be user")
 
-    elif model_enum == PlayerType.MINIMAX: print("model_enum is a minimax")
+    elif model_enum == PlayerType.MINIMAX: 
+        print("model_enum is a minimax")
+        computing  = get_decent_minimax()
     
     to_play = Minimax.get_player_to_play(board)
     col = computing.choose_move(board,to_play)
@@ -79,11 +91,9 @@ def getMove(request : RequestMove):
     
     flag = 0 # nothing
     if Minimax.check_winner(board , row, col, to_play):
-        model  =get_decent_minimax()
         flag =  (1 - to_play) / 2 + 1 # somebody won
     elif not Minimax.get_valid_moves(board): 
         flag = 3 # a draw
-        model  =get_decent_minimax()
     return  {"column" :col , "flag" : flag}
 
 
