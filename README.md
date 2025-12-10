@@ -34,10 +34,14 @@ fastapi dev server.py
 ```
 When server is live, go to http://127.0.0.1:8000.
 
-### running frontend for development:
+## running frontend for development:
 ```
 cd frontend
 npm run dev
 ```
+
+## hosted website
+This project is also hosted on this [website](https://connect-4-game-solver.onrender.com/)
+however, the ai model is very slow on it.
 
 
