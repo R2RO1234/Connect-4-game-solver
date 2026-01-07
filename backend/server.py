@@ -24,6 +24,8 @@ class PlayerType(Enum):
 
 
 ai_model = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global ai_model
